@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Oswald:wght@200;300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      img {
+        max-width: 100%;
+      }
+      body {
+        background-color: #687e8c;
+      }
+      main {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-gap: 5px;
+        margin: 150px;
+      }
+      nav {
+        display: flex;
+        justify-content: start;
+        margin: 30px;
+        place-content: center;
+        gap: 5px;
+      }
+      button {
+        background-color: #f2f2f2;
+        color: black;
+        border: none;
+        padding: 10px;
+        border-radius: 2px;
+      }
+
+      .valgt {
+        background-color: #aabeca;
+      }
+      .menuer {
+        padding: 10px;
+        background-color: #f2f2f2;
+      }
+
+      Header h1 {
+        display: flex;
+        place-content: center;
+        font-family: "Oswald", sans-serif;
+        font-weight: 200;
+        color: white;
+        font-size: 2.5rem;
+      }
+      h1 {
+        display: flex;
+        place-content: center;
+        font-family: "Oswald", sans-serif;
+        font-weight: 400;
+        color: white;
+        font-size: 4rem;
+      }
+
+      h2 {
+        font-family: "Lato", sans-serif;
+      }
+
+      p {
+        font-family: "Lato", sans-serif;
+      }
+
+      #modal {
+        display: none;
+        display: fixed;
+      }
+
+      #modal button {
+        background-color: #687e8c;
+        color: white;
+      }
+
+      #modal article {
+        max-width: 900px;
+        margin: 2em auto;
+        background-color: white;
+        padding: 50px;
+      }
+
+      .mere {
+        background-color: #687e8c;
+        color: white;
+      }
+
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 3rem;
+        }
+        main {
+          margin: 40px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>BISTRO BABUSHKA</h1>
+    <header>
+      <h1>Alle</h1>
+      <nav>
+        <button data-kategori="alle" class="valgt">Alle</button>
+        <button data-kategori="forretter">Forretter</button>
+        <button data-kategori="hovedretter">Hovedretter</button>
+        <button data-kategori="desserter">Desserter</button>
+        <button data-kategori="drikkevarer">Drikkevarer</button>
+      </nav>
+    </header>
+    <aside id="modal">
+      <article>
+        <h2></h2>
+        <img src="" alt="" />
+        <p class="lbeskrivelse"></p>
+        <p class="pris2"></p>
+        <p class="oprindelse"></p>
+        <button class="mindre">Læs mindre</button>
+      </article>
+    </aside>
+
+    <main></main>
+    <section>
+      <template>
+        <article class="menuer">
+          <img src="" alt="" class="billede" />
+          <h2 class="navn"></h2>
+          <p class="kbeskrivelse"></p>
+          <p class="pris"></p>
+          <button class="mere">Læs mere</button>
+        </article>
+      </template>
+    </section>
+
+    <script>
+      // const
+      const header = document.querySelector("header h1");
+      const main = document.querySelector("main");
+      const template = document.querySelector("template").content;
+      const modal = document.querySelector("#modal");
+      const mindre = document.querySelector(".mindre");
+
+      const url = "https://babushka-dd8a.restdb.io/rest/menu";
+      const options = {
+        headers: {
+          "x-apikey": "600ec2fb1346a1524ff12de4",
+        },
+      };
+
+      document.addEventListener("DOMContentLoaded", start);
+      let menuer;
+      let filter = "alle";
+
+      //lytter til klip på knap i nav
+      function start() {
+        const filterKnapper = document.querySelectorAll("nav button");
+        filterKnapper.forEach((knap) =>
+          knap.addEventListener("click", filtrerMenu)
+        );
+        hentMenu();
+      }
+
+      // filtrer menuer efter kategori
+
+      function filtrerMenu() {
+        filter = this.dataset.kategori;
+        document.querySelector(".valgt").classList.remove("valgt");
+        this.classList.add("valgt");
+        visMenu();
+        header.textContent = this.textContent;
+      }
+
+      async function hentMenu() {
+        const resspons = await fetch(url, options);
+        const json = await resspons.json();
+        menuer = json;
+        visMenu();
+      }
+
+      //viser menu når siden åbner
+
+      function visMenu() {
+        main.textContent = "";
+        console.log(menuer);
+
+        menuer.forEach((menu) => {
+          if (filter == menu.kategori || filter == "alle") {
+            const klon = template.cloneNode(true);
+            klon.querySelector("img").src =
+              "medium/" + menu.billednavn + "-md.jpg";
+            klon.querySelector(".navn").textContent = menu.navn;
+            klon.querySelector(".kbeskrivelse").textContent =
+              menu.kortbeskrivelse;
+            klon.querySelector(".pris").textContent =
+              "Pris: " + menu.pris + " ,-";
+            klon
+              .querySelector("article")
+              .addEventListener("click", () => visDetaljer(menu));
+            main.appendChild(klon);
+          }
+        });
+
+        //vis detajler i modal (pop up)
+
+        function visDetaljer(menu) {
+          console.log(menu);
+          modal.querySelector("h2").textContent = menu.navn;
+          modal.querySelector("img").src =
+            "medium/" + menu.billednavn + "-md.jpg";
+          modal.querySelector(".lbeskrivelse").textContent =
+            menu.langbeskrivelse;
+          modal.querySelector(".pris2").textContent =
+            "Pris: " + menu.pris + " ,-";
+          modal.querySelector(".oprindelse").textContent =
+            "Oprindelse: " + menu.oprindelsesregion;
+          modal.style.display = "block";
+          main.style.display = "none";
+        }
+        mindre.addEventListener(
+          "click",
+          () => ((modal.style.display = "none"), (main.style.display = "grid"))
+        );
+      }
+      hentMenu();
+    </script>
+  </body>
+</html>
